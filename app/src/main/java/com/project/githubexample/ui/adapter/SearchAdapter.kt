@@ -2,38 +2,36 @@ package com.project.githubexample.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.navigation.findNavController
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.project.githubexample.data.dto.Items
-import com.project.githubexample.databinding.ItemUserBinding
+import com.project.githubexample.databinding.ItemSearchBinding
+import com.project.githubexample.ui.home.SearchFragmentDirections
 
-class UserAdapter : PagingDataAdapter<Items,UserAdapter.UserViewHolder>(DiffUtilCallBack()) {
-
+class SearchAdapter : PagingDataAdapter<Items,SearchAdapter.UserViewHolder>(DiffUtilCallBack()) {
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
-        val user = getItem(position)
-        if (user != null) {
-            holder.binds(user)
+        val searchResult = getItem(position)
+        if (searchResult != null) {
+            holder.binds(searchResult)
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder =
-        UserViewHolder(ItemUserBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+        UserViewHolder(ItemSearchBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
 
-    class UserViewHolder(private val binding: ItemUserBinding) :
+    class UserViewHolder(private val binding: ItemSearchBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun binds(userInfo: Items) {
+
+        fun binds(item: Items) {
             binding.apply {
-                user = userInfo
-
-                Glide
-                    .with(this.root)
-                    .load(userInfo.avatarUrl)
-                    .into(thumbnail)
-
+                searchResult = item
+                binding.setClickListener {
+                    it.findNavController().navigate(SearchFragmentDirections.actionNavSearchToUser(item.login))
+                }
                 executePendingBindings()
             }
         }

@@ -15,8 +15,6 @@ class GithubExampleApplication : Application() {
 
         initLogger()
 
-        //git api outh
-        //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
     }
 
     private fun initLogger() {

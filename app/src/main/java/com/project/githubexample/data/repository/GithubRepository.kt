@@ -1,16 +1,14 @@
 package com.project.githubexample.data.repository
 
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
+import androidx.lifecycle.LiveData
+import androidx.paging.*
 import com.project.githubexample.data.datasource.local.GithubLocalSource
 import com.project.githubexample.data.datasource.remote.GithubRemoteSource
 import com.project.githubexample.data.datasource.remote.api.GithubApiService
-import com.project.githubexample.data.dto.Items
-import com.project.githubexample.data.dto.User
-import com.project.githubexample.data.paging.UserPagingSource
+import com.project.githubexample.data.dto.*
+import com.project.githubexample.data.paging.UserInfoPagingSource
+import com.project.githubexample.data.paging.SearchPagingSource
 import com.project.githubexample.network.NetworkState
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class GithubRepository @Inject constructor(
@@ -19,11 +17,24 @@ class GithubRepository @Inject constructor(
     private val githubLocalSource: GithubLocalSource
 ){
     suspend fun searchUsers(id: String, page: Int)
-    : NetworkState<User> =
+    : NetworkState<SearchUserModel> =
         githubRemoteSource.searchUsers(id, page)
 
-    fun getUsers(id: String): Flow<PagingData<Items>> = Pager(
+    fun searchUsers(id: String): LiveData<PagingData<Items>> = Pager(
         config = PagingConfig(1,enablePlaceholders = false)) {
-            UserPagingSource(id, githubApiService)
-        }.flow
+        SearchPagingSource(id, githubApiService)
+    }.liveData
+
+    suspend fun getUserInfo(id: String)
+    : NetworkState<BaseItemModel> =
+        githubRemoteSource.getUserInfo(id)
+
+    suspend fun getUserRepos(id: String)
+            : NetworkState<List<BaseItemModel>> =
+        githubRemoteSource.getUserRepos(id)
+
+    fun getUserEvents(id: String): LiveData<PagingData<BaseItemModel>> = Pager(
+        config = PagingConfig(1, enablePlaceholders = false)) {
+        UserInfoPagingSource(id, githubApiService)
+    }.liveData
 }

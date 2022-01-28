@@ -6,6 +6,7 @@ import com.project.githubexample.data.datasource.remote.GithubRemoteSource
 import com.project.githubexample.data.datasource.remote.api.GithubApiService
 import com.project.githubexample.data.repository.GithubRepository
 import com.project.githubexample.network.AuthInterceptor
+import com.project.githubexample.utils.Constants.BASE_URL
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -24,7 +25,7 @@ class AppModule {
 
     @Singleton
     @Provides
-    fun provideBaseUrl() = "https://api.github.com"
+    fun provideBaseUrl() = BASE_URL
 
     @Singleton
     @Provides

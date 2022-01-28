@@ -1,34 +1,33 @@
 package com.project.githubexample.ui.home
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.SearchView
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
-import com.orhanobut.logger.Logger
 import com.project.githubexample.R
 import com.project.githubexample.databinding.FragmentSearchBinding
-import com.project.githubexample.ui.adapter.UserAdapter
+import com.project.githubexample.ui.adapter.SearchAdapter
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+
 
 @AndroidEntryPoint
 class SearchFragment : Fragment() {
     private val viewModel by viewModels<SearchViewModel>()
     private lateinit var binding: FragmentSearchBinding
-    private lateinit var userAdapter: UserAdapter
+    private lateinit var searchAdapter: SearchAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = DataBindingUtil.inflate(
             inflater,
             R.layout.fragment_search,
@@ -43,43 +42,44 @@ class SearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        refresh()
+        setupSwipeRefresh()
 
-        setSearchBar()
+        setupSearchBar()
 
-        setUserAdapter()
+        setupSearchAdapter()
 
+        setupHideKeyboard()
     }
 
-    private fun setUserAdapter() {
-        val viewModel = this.viewModel
-        if (viewModel != null) {
-            userAdapter = UserAdapter()
-            binding.rvUser.adapter = userAdapter
-        } else {
-            Logger.w("ViewModel not initialized when attempting to set up adapter.")
+    @SuppressLint("ClickableViewAccessibility")
+    fun setupHideKeyboard(){
+        binding.rvUser.setOnTouchListener { view, event ->
+            val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(activity?.currentFocus?.windowToken, 0)
         }
     }
 
-    private fun refresh() {
+    private fun setupSearchAdapter() {
+        searchAdapter = SearchAdapter()
+        binding.rvUser.adapter = searchAdapter
+    }
+
+    private fun setupSwipeRefresh() {
         binding.refreshLayout.setOnRefreshListener {
+            viewModel.searchQuery.value?.let {
+                getSearchResult(it)
+            }
             binding.refreshLayout.isRefreshing = false
         }
     }
 
-    private fun setSearchBar() {
+    private fun setupSearchBar() {
         binding.searchBar.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-
-//                query?.let { viewModel.searchUsers(query, 1) }
-                lifecycleScope.launch {
-                    query?.let {
-                        viewModel.getUsers(it).collect { userData ->
-                            userAdapter.submitData(userData)
-                        }
-                    }
+                query?.let {
+                    viewModel.setSearchQuery(it)
+                    getSearchResult(it)
                 }
-
                 return true
             }
 
@@ -87,5 +87,11 @@ class SearchFragment : Fragment() {
                 return true
             }
         })
+    }
+
+    private fun getSearchResult(query: String) {
+        viewModel.searchUsers(query).observe(viewLifecycleOwner) { userData ->
+            searchAdapter.submitData(lifecycle, userData)
+        }
     }
 }

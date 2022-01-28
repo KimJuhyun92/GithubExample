@@ -7,7 +7,7 @@ import com.project.githubexample.data.dto.Items
 import retrofit2.HttpException
 import java.io.IOException
 
-class UserPagingSource (private val id: String, private val githubApiService: GithubApiService) : PagingSource<Int, Items>(){
+class SearchPagingSource (private val id: String, private val githubApiService: GithubApiService) : PagingSource<Int, Items>(){
 
     private companion object {
         const val DEFAULT_PAGE_INDEX = 1
@@ -15,7 +15,7 @@ class UserPagingSource (private val id: String, private val githubApiService: Gi
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Items> {
         val page = params.key ?: DEFAULT_PAGE_INDEX
-        val user = githubApiService.searchUsers(id, params.loadSize)
+        val user = githubApiService.searchUsers(id, page)
 
         return try {
             LoadResult.Page(
@@ -24,7 +24,7 @@ class UserPagingSource (private val id: String, private val githubApiService: Gi
                 nextKey = if (user.items.isNullOrEmpty()) null else page + 1
             )
         } catch (exception: IOException) {
-            val error = IOException("Please Check Internet Connection")
+            val error = IOException(exception)
             LoadResult.Error(error)
         } catch (exception: HttpException) {
             LoadResult.Error(exception)
